@@ -4,9 +4,9 @@ import os
 
 import numpy as np
 import numpy.random as npr
-from oneibl.onelight import ONE
+from one_global import one
 
-from preprocessing_utils import load_animal_eid_dict, load_data
+from preprocessing_utils import load_animal_eid_dict, load_data, get_session_id
 
 npr.seed(65)
 
@@ -16,8 +16,6 @@ if __name__ == '__main__':
         ibl_data_path + 'data_for_cluster/final_animal_eid_dict.json')
     # must change directory for working with ONE
     os.chdir(ibl_data_path)
-    one = ONE()
-
     data_dir = 'response_times/data_by_animal/'
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
@@ -27,27 +25,35 @@ if __name__ == '__main__':
         animal_inpt, animal_y, animal_session = load_data(
             'data_for_cluster/data_by_animal/' + animal + '_processed.npz')
         for z, eid in enumerate(animal_eid_dict[animal]):
-            raw_session_id = eid.split('Subjects/')[1]
-            session_id = raw_session_id.replace('/', '-')
-            full_sess_len = len(one.load_dataset(eid, '_ibl_trials.choice'))
 
-            file_names = [
-                '_ibl_trials.feedback_times', '_ibl_trials.response_times',
-                '_ibl_trials.goCue_times', '_ibl_trials.stimOn_times'
-            ]
+            print(eid)
 
-            save_vars = [
-                'feedback_times', 'response_times', 'go_cues', 'stim_on_times'
-            ]
+            trial_data = one.load_object(eid, 'trials', collection='alf')
+            choice = trial_data.choice
 
-            for i, file in enumerate(file_names):
-                full_path = 'ibl-behavioral-data-Dec2019/' + eid + \
-                                 '/alf/' + file + '.npy'
-                if os.path.exists(full_path):
-                    globals()[save_vars[i]] = one.load_dataset(eid, file)
-                else:
-                    globals()[save_vars[i]] = np.empty((full_sess_len, ))
-                    globals()[save_vars[i]][:] = np.nan
+            session_id = get_session_id(eid)
+            full_sess_len = len(choice)
+
+            try:
+                globals()["feedback_times"] = trial_data.feedback_times
+            except AttributeError:
+                print(f"Issue saving 'feedback_times' for {eid}")
+                globals()['feedback_times'] = np.nan*np.ones((full_sess_len, ))
+            try:
+                globals()["response_times"] = trial_data.response_times
+            except AttributeError:
+                print(f"Issue saving 'response_times' for {eid}")
+                globals()['response_times'] = np.nan*np.ones((full_sess_len, ))
+            try:
+                globals()["go_cues"] = trial_data.goCue_times
+            except AttributeError:
+                print(f"Issue saving 'go_cues' for {eid}")
+                globals()['go_cues'] = np.nan*np.ones((full_sess_len, ))
+            try:
+                globals()["stim_on_times"] = trial_data.stimOn_times
+            except AttributeError:
+                print(f"Issue saving 'stim_on_times' for {eid}")
+                globals()['stim_on_times'] = np.nan*np.ones((full_sess_len, ))
 
             start = np.nanmin(np.c_[stim_on_times, go_cues], axis=1)
 
@@ -78,8 +84,7 @@ if __name__ == '__main__':
                     full_sess_len and len(end) == full_sess_len: #
                 # check that times are increasing and that len(start) ==
                 # full_sess_len etc
-                prob_left_dta = one.load_dataset(
-                    eid, '_ibl_trials.probabilityLeft')
+                prob_left_dta = trial_data.probabilityLeft
                 assert start.shape[0] == prob_left_dta.shape[0],\
                     "different lengths for prob left and raw response dta: " + \
                     str(start.shape[0]) + " vs " + str(

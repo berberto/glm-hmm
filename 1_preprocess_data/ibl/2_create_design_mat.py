@@ -4,6 +4,7 @@ from sklearn import preprocessing
 import numpy.random as npr
 import os
 import json
+from pprint import pprint
 from collections import defaultdict
 from preprocessing_utils import load_animal_list, load_animal_eid_dict, \
     get_all_unnormalized_data_this_session, create_train_test_sessions
@@ -11,25 +12,28 @@ from preprocessing_utils import load_animal_list, load_animal_eid_dict, \
 npr.seed(65)
 
 if __name__ == '__main__':
-    data_dir = '../../data/ibl/'
+    data_dir = '../../data/ibl'
     # Create directories for saving data:
-    processed_ibl_data_path = data_dir + "data_for_cluster/"
+    processed_ibl_data_path = f"{data_dir}/data_for_cluster"
     if not os.path.exists(processed_ibl_data_path):
         os.makedirs(processed_ibl_data_path)
     # Also create a subdirectory for storing each individual animal's data:
-    if not os.path.exists(processed_ibl_data_path + "data_by_animal/"):
-        os.makedirs(processed_ibl_data_path + "data_by_animal/")
+    data_by_animal_path = f"{processed_ibl_data_path}/data_by_animal"
+    if not os.path.exists(data_by_animal_path):
+        os.makedirs(data_by_animal_path)
 
     # Load animal list/results of partial processing:
-    animal_list = load_animal_list(
-        data_dir + 'partially_processed/animal_list.npz')
-    animal_eid_dict = load_animal_eid_dict(
-        data_dir + 'partially_processed/animal_eid_dict.json')
+    part_processed_path = f"{data_dir}/partially_processed"
+
+    animal_list = load_animal_list(f'{part_processed_path}/animal_list.npz')
+
+    animal_eid_dict = load_animal_eid_dict(f'{part_processed_path}/animal_eid_dict.json')
 
     # Require that each animal has at least 30 sessions (=2700 trials) of data:
     req_num_sessions = 30  # 30*90 = 2700
     for animal in animal_list:
-        num_sessions = len(animal_eid_dict[animal])
+        eids = animal_eid_dict[animal]
+        num_sessions = len(eids)
         if num_sessions < req_num_sessions:
             animal_list = np.delete(animal_list,
                                     np.where(animal_list == animal))
@@ -45,8 +49,7 @@ if __name__ == '__main__':
         sess_counter = 0
         for eid in animal_eid_dict[animal]:
             animal, unnormalized_inpt, y, session, num_viols_50, rewarded = \
-                get_all_unnormalized_data_this_session(
-                    eid)
+                get_all_unnormalized_data_this_session(eid, path=f"{part_processed_path}/eid_info_dict.pkl")
             if num_viols_50 < 10:  # only include session if number of viols
                 # in 50-50 block is less than 10
                 if sess_counter == 0:
@@ -64,19 +67,18 @@ if __name__ == '__main__':
                 final_animal_eid_dict[animal].append(eid)
         # Write out animal's unnormalized data matrix:
         np.savez(
-            processed_ibl_data_path + 'data_by_animal/' + animal +
+            processed_ibl_data_path + '/data_by_animal/' + animal +
             '_unnormalized.npz',
             animal_unnormalized_inpt, animal_y,
             animal_session)
-        animal_session_fold_lookup = create_train_test_sessions(animal_session,
-                                                                5)
+        animal_session_fold_lookup = create_train_test_sessions(animal_session) #, num_folds=5)
         np.savez(
-            processed_ibl_data_path + 'data_by_animal/' + animal +
+            processed_ibl_data_path + '/data_by_animal/' + animal +
             "_session_fold_lookup" +
             ".npz",
             animal_session_fold_lookup)
         np.savez(
-            processed_ibl_data_path + 'data_by_animal/' + animal +
+            processed_ibl_data_path + '/data_by_animal/' + animal +
             '_rewarded.npz',
             animal_rewarded)
         assert animal_rewarded.shape[0] == animal_y.shape[0]
@@ -113,23 +115,23 @@ if __name__ == '__main__':
                                    "al. (2020)"
     normalized_inpt = np.copy(master_inpt)
     normalized_inpt[:, 0] = preprocessing.scale(normalized_inpt[:, 0])
-    np.savez(processed_ibl_data_path + 'all_animals_concat' + '.npz',
+    np.savez(processed_ibl_data_path + '/all_animals_concat' + '.npz',
              normalized_inpt,
              master_y, master_session)
     np.savez(
-        processed_ibl_data_path + 'all_animals_concat_unnormalized' + '.npz',
+        processed_ibl_data_path + '/all_animals_concat_unnormalized' + '.npz',
         master_inpt, master_y, master_session)
     np.savez(
-        processed_ibl_data_path + 'all_animals_concat_session_fold_lookup' +
+        processed_ibl_data_path + '/all_animals_concat_session_fold_lookup' +
         '.npz',
         master_session_fold_lookup_table)
-    np.savez(processed_ibl_data_path + 'all_animals_concat_rewarded' + '.npz',
+    np.savez(processed_ibl_data_path + '/all_animals_concat_rewarded' + '.npz',
              master_rewarded)
-    np.savez(processed_ibl_data_path + 'data_by_animal/' + 'animal_list.npz',
+    np.savez(processed_ibl_data_path + '/data_by_animal/' + 'animal_list.npz',
              animal_list)
 
     json = json.dumps(final_animal_eid_dict)
-    f = open(processed_ibl_data_path + "final_animal_eid_dict.json", "w")
+    f = open(processed_ibl_data_path + "/final_animal_eid_dict.json", "w")
     f.write(json)
     f.close()
 
@@ -143,7 +145,7 @@ if __name__ == '__main__':
         y = master_y[range(start_idx, end_idx + 1)]
         session = master_session[range(start_idx, end_idx + 1)]
         counter += inpt.shape[0]
-        np.savez(processed_ibl_data_path + 'data_by_animal/' + animal + '_processed.npz',
+        np.savez(processed_ibl_data_path + '/data_by_animal/' + animal + '_processed.npz',
                  inpt, y,
                  session)
 

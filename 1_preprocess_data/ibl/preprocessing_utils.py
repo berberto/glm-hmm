@@ -2,38 +2,51 @@ import numpy as np
 import numpy.random as npr
 from scipy.stats import bernoulli
 import json
+import pickle
 import os
-from oneibl.onelight import ONE
+from one_global import one
+from functools import lru_cache
 
-one = ONE()
+@lru_cache
+def get_eid_info (path=None):
+    if path is None:
+        path = "../../data/ibl/partially_processed/eid_info_dict.pkl"
+    try:
+        with open(path, "rb") as f:
+            eid_info_dict = pickle.load(f)
+    except:
+        raise FileNotFoundError("Error loading eid info")
+    return eid_info_dict
 
 
-def get_animal_name(eid):
-    # get session id:
-    raw_session_id = eid.split('Subjects/')[1]
-    # Get animal:
-    animal = raw_session_id.split('/')[0]
+# doesn't work with current way eids are given
+# (or is because of the different version of ONE?)
+def get_animal_name(eid, info=None, path=None):
+    if info is None:
+        info = get_eid_info(path)
+    animal = info[eid]['subject']
     return animal
 
+def get_session_id(eid, info=None, path=None):
+    if info is None:
+        info = get_eid_info(path)
+    session = info[eid]
+    session_id = f"{session['subject']}-{session['date']}-{session['number']:03d}"
+    return session_id
 
-def get_raw_data(eid):
+
+def get_raw_data(eid, info=None, path=None):
     print(eid)
-    # get session id:
-    raw_session_id = eid.split('Subjects/')[1]
     # Get animal:
-    animal = raw_session_id.split('/')[0]
-    # replace '/' with dash in session ID
-    session_id = raw_session_id.replace('/', '-')
-    # hack to work with ONE:
-    current_dir = os.getcwd()
-    os.chdir("../../data/ibl/")
+    animal = get_animal_name(eid, info=info, path=path)
+    session_id = get_session_id(eid, info=info, path=path)
     # Get choice data, stim data and rewarded/not rewarded:
-    choice = one.load_dataset(eid, '_ibl_trials.choice')
-    stim_left = one.load_dataset(eid, '_ibl_trials.contrastLeft')
-    stim_right = one.load_dataset(eid, '_ibl_trials.contrastRight')
-    rewarded = one.load_dataset(eid, '_ibl_trials.feedbackType')
-    bias_probs = one.load_dataset(eid, '_ibl_trials.probabilityLeft')
-    os.chdir(current_dir)
+    trials = one.load_object(eid, 'trials', collection='alf')
+    choice = trials.choice
+    stim_left = trials.contrastLeft
+    stim_right = trials.contrastRight
+    rewarded = trials.feedbackType
+    bias_probs = trials.probabilityLeft
     return animal, session_id, stim_left, stim_right, rewarded, choice, \
            bias_probs
 
@@ -146,10 +159,13 @@ def create_design_mat(choice, stim_left, stim_right, rewarded):
     return design_mat
 
 
-def get_all_unnormalized_data_this_session(eid):
+def get_all_unnormalized_data_this_session(eid, path=None):
+
+    eid_info_dict = get_eid_info(path)
+
     # Load raw data
     animal, session_id, stim_left, stim_right, rewarded, choice, bias_probs \
-        = get_raw_data(eid)
+        = get_raw_data(eid, info=eid_info_dict)
     # Subset choice and design_mat to 50-50 entries:
     trials_to_study = np.where(bias_probs == 0.5)[0]
     num_viols_50 = len(np.where(choice[trials_to_study] == 0)[0])
