@@ -19,6 +19,12 @@ def get_eid_info (path=None):
     return eid_info_dict
 
 
+def path2eid(path):
+    lab, _, subject, date, number = path.split('/')
+    _eids, _info = one.search(laboratory=lab, date_range=[date,date], number=number, subject=subject, details=True)
+    return _eids[0], _info[0]
+    
+
 # doesn't work with current way eids are given
 # (or is because of the different version of ONE?)
 def get_animal_name(eid, info=None, path=None):
