@@ -11,16 +11,16 @@ np.random.seed(65)
 
 if __name__ == '__main__':
 
-    data_dir = '../../data/ibl/data_for_cluster/'
-    results_dir = '../../results/ibl_global_fit/'
+    data_dir = '../../data/ibl/data_for_cluster'
+    results_dir = '../../results/ibl_global_fit'
 
-    num_lapse_params = 1
+    num_lapse_params = 2
     num_folds = 5
 
     # Fit GLM to all data
-    animal_file = data_dir + 'all_animals_concat.npz'
+    animal_file = f"{data_dir}/all_animals_concat.npz"
     session_fold_lookup_table = load_session_fold_lookup(
-        data_dir + 'all_animals_concat_session_fold_lookup.npz')
+        f"{data_dir}/all_animals_concat_session_fold_lookup.npz")
 
     for fold in range(num_folds):
         inpt, y, session = load_data(animal_file)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         M = this_inpt.shape[1]
         loglikelihood_train_vector = []
 
-        figure_directory = results_dir + "Lapse_Model/fold_" + str(fold) + '/'
+        figure_directory = f"{results_dir}/Lapse_Model/fold_{str(fold)}"
         if not os.path.exists(figure_directory):
             os.makedirs(figure_directory)
 
@@ -119,8 +119,7 @@ if __name__ == '__main__':
                 this_lapse = these_pars[0][1][0]
                 lapse_std.append(this_sd[-1])
                 if j == 0:
-                    np.savez(figure_directory +
-                             'lapse_model_params_one_param.npz',
+                    np.savez(f"{figure_directory}/lapse_model_params_one_param.npz",
                              loglikelihood=this_ll,
                              glm_weights=glm_weights,
                              glm_std=this_sd,
@@ -131,8 +130,7 @@ if __name__ == '__main__':
                 this_lapse = [these_pars[0][1][0], these_pars[0][1][1]]
                 lapse_std.append([this_sd[-2], this_sd[-1]])
                 if j == 0:
-                    np.savez(figure_directory +
-                             'lapse_model_params_two_param.npz',
+                    np.savez(f"{figure_directory}/lapse_model_params_two_param.npz",
                              loglikelihood=this_ll,
                              glm_weights=glm_weights,
                              glm_std=this_sd,
@@ -184,7 +182,7 @@ if __name__ == '__main__':
                 "Logistic Regression with Lapse Parameter: Top 3 "
                 "Initializations \n All Animals",
                 fontsize=15)
-            fig.savefig(figure_directory + 'lapse_model_fit_1_param.png')
+            fig.savefig(f"{figure_directory}/lapse_model_fit_1_param.png")
 
         else:
             lapse_params_for_plotting = np.array(lapse_params_for_plotting)
@@ -225,10 +223,10 @@ if __name__ == '__main__':
                 "Logistic Regression with Lapse Parameter: Top 3 "
                 "Initializations \n All Animals",
                 fontsize=15)
-            fig.savefig(figure_directory + 'lapse_model_fit_1_param.png')
+            fig.savefig(f"{figure_directory}/lapse_model_fit_1_param.png")
         else:
             fig.suptitle(
                 "Logistic Regression with Lapse Parameter: Top 3 "
                 "Initializations \n All Animals",
                 fontsize=15)
-            fig.savefig(figure_directory + 'lapse_model_fit_2_param.png')
+            fig.savefig(f"{figure_directory}/lapse_model_fit_2_param.png")

@@ -374,7 +374,10 @@ def calculate_cv_bit_trial(ll_model, ll_0, n_trials):
 def create_cv_frame_for_plotting(cv_file):
     cvbt_folds_model = load_cv_arr(cv_file)
     glm_lapse_model = cvbt_folds_model[:3, ]
-    idx = np.array([0, 3, 4, 5, 6])
+    # idx = np.array([0, 3, 4, 5, 6])
+    idx = np.arange(5)
+    # print(cvbt_folds_model.shape)
+    # exit()
     cvbt_folds_model = cvbt_folds_model[idx, :]
     # Identify best cvbt:
     mean_cvbt = np.mean(cvbt_folds_model, axis=1)

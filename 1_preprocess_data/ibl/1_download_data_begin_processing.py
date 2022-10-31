@@ -33,48 +33,101 @@ if __name__ == '__main__':
         with open(f"{eids_dict_path}/eids_info.pkl", "rb") as f:
             eids, info = pickle.load(f)
         print("Loaded existing eids and info...")
-        print("These were converted from Ashwood et al. data, compatibly with one.api.ONE")
+        # print("These were converted from Ashwood et al. data, compatibly with one.api.ONE")
+        print("These were found in a spreadsheet called ME")
     except:
-        raise Exception("Failed to load `eids` and `info`. You need to search yourself, mate.")
+        # raise Exception("Failed to load `eids` and `info`. You need to search yourself, mate.")
         # If this exception was thrown at you, you should write the search code below...
         # Something like...
         # >>> eids, info = one.search(dataset=["trials"],
         # >>>                         date_range=["2019-01-01","2019-12-31"], 
         # >>>                         datails=True)
+        print("Failed to load `eids` and `info`.") 
+        print("Search all eids for subjects with neural data...")
+        # # 1) find all the eids with neural data
+        # eids, info = one.search(dataset=['spikes'], details=True)
+        # 1b) take eids from ME spreadsheet
+        with open(f"{eids_dict_path}/eids_info_ME.pkl", "rb") as f:
+            eids, info = pickle.load(f)
+        print(f"Found {len(eids)} eids with 'spikes' data")
+        # 2) for those, collect the name of the subjects
+        subjects = []
+        for _eid, _dict in zip(eids,info):
+            subjects.append(_dict['subject'])
+        subjects = list(set(subjects)) # unique subjects
+        print(f"Found {len(subjects)} subjects with 'spikes' data")
+        # 3) search all the eids for that subject, and discard subject if less than 30
+        eids = []
+        info = []
+        for subject in subjects:
+            _eids, _info = one.search(subject=[subject], details=True)
+            print(f"{subject} -- {len(_eids)}")
+            if len(_eids) < 30:
+                continue
+            eids += _eids
+            info += _info
+        # 4) save search
+        with open(f"{eids_dict_path}/eids_info_AP.pkl", "wb") as f:
+            pickle.dump([eids, info], f)
+
+    print(f"Found a total of {len(eids)} eids")
 
     assert len(eids) > 0, "ONE search is in incorrect directory"
     animal_list = []
     animal_eid_dict = defaultdict(list)
 
     try:
-        # load the eids and info for data in Ashwood et al that also have neural data
         with open(f"{out_dir}/eids_info_neural.pkl", "rb") as f:
             eids_neural, info_neural = pickle.load(f)
+        print("Loaded neural eids and info from that ME spreadsheet.")
     except FileNotFoundError as e:
-        # if can't find it, search them
-        print(e)
-        eids_neural = one.search(dataset=['trials', 'spikes'])
-        idx = [eids.index(_eid) for _eid in eids_neural]
-        info_neural = [info[i] for i in idx]
+        import pandas as pd
+        df = pd.read_csv(f"{ibl_data_path}/ME.csv")
+        print(df)
+
+        eids_neural = list(df['eid'].to_numpy())     
+
+        info_neural = []
+        for i, eid in enumerate(eids_neural):
+            print(i, eid)
+            _d = one.get_details(eid)
+            info_neural.append(_d)
+
+        # pprint(info_neural)
+        # # if can't find it, search them
+        # print(e)
+        # print("Among the eids found, search those with neural data")
+        # eids_neural = []
+        # info_neural = []
+        # for _eid, _dict in zip(eids, info):
+        #     try:
+        #         probe_insertions = one.load_dataset(_eid, 'probes.description')
+        #         eids_neural.append(_eid)
+        #         info_neural.append(_dict)
+        #     except:
+        #         pass
+
         # save info on file
         with open(f"{out_dir}/eids_info_neural.pkl", "wb") as f:
             pickle.dump([eids_neural, info_neural], f)
 
+    print(f"Found {len(eids_neural)} eids with neural data")
+
     paths_neural = []
+    probes = []
     eid_info_dict = {}
-    for i, eid in enumerate(eids_neural):
+    for i, eid in enumerate(eids):
 
         print("\n====================================")
-        print(f"{i +1} of {len(eids_neural)}")
+        print(f"{i +1} of {len(eids)}")
         print("------------------------------------")
         print(eid)
         print("------------------------------------")
-        pprint(info_neural[i])
+        pprint(info[i])
 
         # load the behavioural data
         try:
             trial_data = one.load_object(eid, 'trials', collection="alf")
-            # ?) only this is needed?
             bias_probs = trial_data.probabilityLeft
         except:
             # skip eid if there's some issue with `probabilityLeft`
@@ -89,22 +142,34 @@ if __name__ == '__main__':
                 print(f"probe: {probe_label}")
                 
                 # then try to load the object -- care about `times`, `amps` and `depths` only
-                # ?) wouldn't `times` and `depths` be enough?
                 spikes = one.load_object(eid, 'spikes', collection=f"alf/{probe_label}",
-                                    attribute=['times','amps','depths'])
+                                    attribute=['times','amps','depths','clusters'])
+                clusters = one.load_object(eid, 'clusters', collection=f"alf/{probe_label}")
                 print("Spike data loaded")
                 _path = one.eid2path(eid)
                 paths_neural.append(str(_path))
+                probes.append(probe_label)
 
                 # # WHILE TESTING
                 # # raster plot of spikes
                 # from brainbox.plot import driftmap
                 # import matplotlib.pyplot as plt
+                # # fig, ax = plt.subplots()
+                # # driftmap(spikes.times, spikes.depths, ax=ax, t_bin=0.1, d_bin=5);
+                # # fig.savefig(f"{_path}/raster_depths.png", bbox_inches="tight")
+                # # os.system(f"cp {_path}/raster_depths.png raster/{eid}_depths.png")
+                # # # plt.show()
+                # # plt.close(fig)
                 # fig, ax = plt.subplots()
-                # driftmap(spikes.times, spikes.depths, ax=ax, t_bin=0.1, d_bin=5);
-                # fig.savefig(f"{_path}/raster.png", bbox_inches="tight")
+                # mask = np.where((spikes.times > 100) & (spikes.times < 101))
+                # driftmap(spikes.times[mask], spikes.clusters[mask], ax=ax, t_bin=0.001, d_bin=1);
+                # # fig.savefig(f"{_path}/raster_clusters.png", bbox_inches="tight")
+                # # os.system(f"cp {_path}/raster_clusters.png raster/{eid}_clusters.png")
                 # plt.show()
                 # plt.close(fig)
+                # exit()
+                
+                del spikes
 
             except Exception as e:
 
@@ -113,13 +178,11 @@ if __name__ == '__main__':
                 eids_neural.pop(idx)
                 info_neural.pop(idx)
 
-                print("Error loading spike data: ", e)
+                print("Error loading neural data: ", e)
                 continue
 
         comparison = np.sort(np.unique(bias_probs)) == np.array([0.2, 0.5, 0.8])
         print(f'We{" DO NOT " if not np.all(comparison) else " "}have all bias probabilities')
-        if not np.all(comparison):
-            failed_eids.append(eid)
         # sessions with bias blocks
         if isinstance(comparison, np.ndarray):
             # update def of comparison to single True/False

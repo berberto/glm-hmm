@@ -109,10 +109,10 @@ if __name__ == '__main__':
            np.shape(master_session_fold_lookup_table)[
                0], "number of unique sessions and session fold lookup don't " \
                    "match"
-    assert len(master_inpt) == 181530, "design matrix for all IBL animals " \
-                                       "should have shape (181530, 3)"
-    assert len(animal_list) == 37, "37 animals were studied in Ashwood et " \
-                                   "al. (2020)"
+    # assert len(master_inpt) == 181530, "design matrix for all IBL animals " \
+    #                                    "should have shape (181530, 3)"
+    # assert len(animal_list) == 37, "37 animals were studied in Ashwood et " \
+    #                                "al. (2020)"
     normalized_inpt = np.copy(master_inpt)
     normalized_inpt[:, 0] = preprocessing.scale(normalized_inpt[:, 0])
     np.savez(processed_ibl_data_path + '/all_animals_concat' + '.npz',

@@ -105,12 +105,10 @@ def get_file_name_for_best_model_fold(cvbt_folds_model, K, overall_dir,
     loc_best = 0
     best_fold = np.where(cvbt_folds_model[loc_best, :] == max(cvbt_folds_model[
         loc_best, :]))[0][0]
-    base_path = overall_dir + '/GLM_HMM_K_' + str(K) + '/fold_' + str(
-        best_fold)
-    key_for_dict = '/GLM_HMM_K_' + str(K) + '/fold_' + str(best_fold)
+    base_path = f"{overall_dir}/GLM_HMM_K_{str(K)}/fold_{str(best_fold)}"
+    key_for_dict = f"/GLM_HMM_K_{str(K)}/fold_{str(best_fold)}"
     best_iter = best_init_cvbt_dict[key_for_dict]
-    raw_file = base_path + '/iter_' + str(
-        best_iter) + '/glm_hmm_raw_parameters_itr_' + str(best_iter) + '.npz'
+    raw_file = f"{base_path}/iter_{str(best_iter)}/glm_hmm_raw_parameters_itr_{str(best_iter)}.npz"
     return raw_file
 
 
