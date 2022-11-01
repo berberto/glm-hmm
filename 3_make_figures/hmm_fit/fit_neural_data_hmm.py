@@ -28,10 +28,10 @@ def get_session_ids (eids):
         session_ids.append(session_id)
     return session_ids
 
-from scipy.cluster.hierarchy import dendrogram
-from sklearn.cluster import AgglomerativeClustering
+
+from sklearn.cluster import KMeans
 def cluster_neurons (spike_counts):
-    model = AgglomerativeClustering(distance_threshold=0, n_clusters=None, linkage="ward")
+    model = KMeans(n_clusters=5)
     model = model.fit(spike_counts)
     idx = np.argsort(model.labels_)
     return np.take(spike_counts, idx, axis=0)
@@ -44,9 +44,32 @@ cols = ['#ff7f00', '#4daf4a', '#377eb8', '#f781bf', '#a65628', '#984ea3',
 
 if __name__ == '__main__':
 
+    import torch as T
     from torch.nn import functional as F
     loss=F.cross_entropy
     # loss=F.mse_loss
+
+    class LogisticRegression (Regression):
+        def score (self, X_test, y_test, y_mean=None):
+            '''
+            mean square error normalized by the average mean square error
+            of the null model where the prediction is uniformly distributed
+            '''
+            y_pred = self.predict(X_test)
+            res_ = y_pred - y_test
+            return np.mean(res_**2) / (1./3. - np.mean(y_test) + np.mean(y_test**2))
+
+        def score_2 (self, X_test, y_test, y_mean=None):
+            '''
+            CE score, relative to the CE from target to its average
+            '''
+            y_test = T.tensor(y_test, dtype=T.float).to(self.device)
+            with T.no_grad():
+                y_pred = T.tensor(self.predict(X_test), dtype=T.float).to(self.device)
+                if y_mean is None:
+                    y_mean = np.mean(y_test, axis=0)
+                y_mean = T.tensor(y_mean, dtype=T.float).repeat(y_test.shape[0]).view(-1,*y_mean.shape).to(self.device)
+            return self.loss(y_pred, y_test) / self.loss(y_mean, y_test)
 
     with open("../../data/ibl/partially_processed/neural_dict.pkl", "rb") as f:
         neural_dict = pickle.load(f)
@@ -82,10 +105,8 @@ if __name__ == '__main__':
         results_dir = f'../../results/ibl_individual_fit/{animal}'
         neural_dir = f'../../data/ibl/partially_processed/spike_counts'
         # figure_dir = '../../neural_hmm_fit/figures'
-        figure_dir = f'../../neural_hmm_fit/{animal}'
-        models_dir = f'{figure_dir}/{loss.__name__}'
-        if not os.path.exists(figure_dir):
-            os.makedirs(figure_dir)
+        output_dir = '../../neural_hmm_fit'
+        models_dir = f'{output_dir}/{loss.__name__}'
         if not os.path.exists(models_dir):
             os.makedirs(models_dir)
 
@@ -238,10 +259,12 @@ if __name__ == '__main__':
             plt.gca().spines['right'].set_visible(False)
             plt.gca().spines['top'].set_visible(False)
             plt.ylim((-0.01, 1.01))
-        fig.savefig(f"{figure_dir}/glm-hmm.svg")
+        fig.savefig(f"{output_dir}/{animal}.svg")
         plt.close(fig)
 
         for i, (eid, sess) in enumerate(zip(eids, session_ids)):
+
+            np.random.seed(1871)
 
             # a plot for each session
             fig = plt.figure(figsize=(8, 4))
@@ -253,7 +276,7 @@ if __name__ == '__main__':
             #
             n_folds = 5
             n_epochs = 100
-            session_dir = f"{models_dir}/{eid}"
+            session_dir = f"{models_dir}/{sess}"
             if not os.path.exists(session_dir):
                 os.makedirs(session_dir)
 
@@ -264,7 +287,7 @@ if __name__ == '__main__':
             y_ = posterior_probs[idx_session, :]
             posterior_probs_this_session_predicted = np.zeros_like(y_)
             
-            # shuffle trials within session
+            # shuffle trials within session before training
             idx_shuffle = np.arange(len(X_))
             np.random.shuffle(idx_shuffle)
             X_ = X_[idx_shuffle]
@@ -279,10 +302,11 @@ if __name__ == '__main__':
             plt.xlabel("True")
             plt.ylabel("Predicted")
             av_score = 0
+            av_score_2 = 0
             # train and test with 5-fold cross validation
             for fold, (train_idx, test_idx) in enumerate(KFold(n_splits=n_folds).split(X_)):
                 print("\nfold ", fold)
-                model = Regression(X_[0], y_[0], models_dir=session_dir, loss=loss)
+                model = LogisticRegression(X_[0], y_[0], models_dir=session_dir, loss=loss, weight_decay=.1)
                 X_train, X_test = X_[train_idx], X_[test_idx]
                 y_train, y_test = y_[train_idx], y_[test_idx]
                 train_loss, test_loss = model.train(X_train, y_train,
@@ -299,13 +323,16 @@ if __name__ == '__main__':
                 _min = min(y_test.min(),y_pred.min())
                 _max = max(y_test.max(),y_pred.max())
 
-                av_score += model.score(X_test, y_test, y_mean=y_mean)/n_folds
+                av_score += model.score(X_test, y_test)/n_folds
+                av_score_2 += model.score_2(X_test, y_test, y_mean=y_mean)/n_folds
 
             for m, color in zip(y_mean, cols):
                 plt.axhline(m, c=color, ls='--')
             plt.plot([_min,_max],[_min,_max], c='k', ls='--')
 
-            plt.title(f"R2 score = {av_score:.4f}")
+            # plt.title(f"score = {av_score:.4f}")
+            plt.text(.01, 1.1, f"rel mse:{av_score:.3f}\nrel CE: {av_score_2:.3f}",
+                bbox=dict(facecolor="white", alpha=0.4), fontsize=8, horizontalalignment='left', verticalalignment='top')
             plt.gca().spines['right'].set_visible(False)
             plt.gca().spines['top'].set_visible(False)
 
@@ -330,8 +357,7 @@ if __name__ == '__main__':
 
             ax.plot(train_mid, color='C0', lw=2, label="train loss")
             ax.plot(test_mid, color='C1', lw=2, label="test loss")
-            # ax.set_title(f"{sess}\nR2 score = {av_score:.4f}")
-            ax.legend()
+            ax.legend(fontsize=8)
 
 
             states_max_posterior = np.argmax(posterior_probs, axis=1)
@@ -353,6 +379,19 @@ if __name__ == '__main__':
             plt.gca().spines['top'].set_visible(False)
             plt.ylabel("spike count\n200 ms before stim", fontsize=10)
             plt.xticks([0, 45, 90], ["0", "45", "90"], fontsize=10)
+
+            fig_, ax_ = plt.subplots(figsize=(6,4))
+            ax_.imshow(spike_counts, origin='lower', aspect='auto',cmap='binary')
+            ticks_pos = np.arange(0, len(spike_counts), 50)
+            ax_.set_yticks(ticks_pos, len(ticks_pos)*[""], fontsize=10)
+            ax_.set_title(sess)
+            ax_.set_xlabel("# trial")
+            ax_.set_ylabel("spike count\n200 ms before stim", fontsize=14)
+            ax_.set_xticks([0, 45, 90], ["0", "45", "90"], fontsize=10)
+            plt.gca().spines['right'].set_visible(False)
+            plt.gca().spines['top'].set_visible(False)
+            fig_.savefig(f"{session_dir}/spike_counts.svg")
+            plt.close(fig_)
 
             #
             #   plot probabilities of hidden states over trials
@@ -430,6 +469,7 @@ if __name__ == '__main__':
 
 
             fig.savefig(f"{session_dir}/session.svg")
+            fig.savefig(f"{models_dir}/{sess}.png")
 
             plt.close(fig)
 
