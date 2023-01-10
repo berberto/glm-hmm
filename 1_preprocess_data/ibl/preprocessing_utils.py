@@ -4,7 +4,6 @@ from scipy.stats import bernoulli
 import json
 import pickle
 import os
-from one_global import one
 from functools import lru_cache
 
 @lru_cache
@@ -19,33 +18,23 @@ def get_eid_info (path=None):
     return eid_info_dict
 
 
-def path2eid(path):
-    lab, _, subject, date, number = path.split('/')
-    _eids, _info = one.search(laboratory=lab, date_range=[date,date], number=number, subject=subject, details=True)
-    return _eids[0], _info[0]
-    
-
 # doesn't work with current way eids are given
 # (or is because of the different version of ONE?)
-def get_animal_name(eid, info=None, path=None):
-    if info is None:
-        info = get_eid_info(path)
-    animal = info[eid]['subject']
+def get_animal_name(eid, one):
+    info = one.get_details(eid)
+    animal = info['subject']
     return animal
 
-def get_session_id(eid, info=None, path=None):
-    if info is None:
-        info = get_eid_info(path)
-    session = info[eid]
-    session_id = f"{session['subject']}-{session['date']}-{session['number']:03d}"
+def get_session_id(eid, one):
+    info = one.get_details(eid)
+    session_id = f"{info['subject']}-{info['date']}-{info['number']:03d}"
     return session_id
 
-
-def get_raw_data(eid, info=None, path=None):
+def get_raw_data(eid, one, info=None, path=None):
     print(eid)
     # Get animal:
-    animal = get_animal_name(eid, info=info, path=path)
-    session_id = get_session_id(eid, info=info, path=path)
+    animal = get_animal_name(eid, one, info=info, path=path)
+    session_id = get_session_id(eid, one, info=info, path=path)
     # Get choice data, stim data and rewarded/not rewarded:
     trials = one.load_object(eid, 'trials', collection='alf')
     choice = trials.choice
@@ -165,13 +154,13 @@ def create_design_mat(choice, stim_left, stim_right, rewarded):
     return design_mat
 
 
-def get_all_unnormalized_data_this_session(eid, path=None):
+def get_all_unnormalized_data_this_session(eid, one, path=None):
 
     eid_info_dict = get_eid_info(path)
 
     # Load raw data
     animal, session_id, stim_left, stim_right, rewarded, choice, bias_probs \
-        = get_raw_data(eid, info=eid_info_dict)
+        = get_raw_data(eid, one, info=eid_info_dict)
     # Subset choice and design_mat to 50-50 entries:
     trials_to_study = np.where(bias_probs == 0.5)[0]
     num_viols_50 = len(np.where(choice[trials_to_study] == 0)[0])

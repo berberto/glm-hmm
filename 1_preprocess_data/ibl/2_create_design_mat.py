@@ -8,6 +8,7 @@ from pprint import pprint
 from collections import defaultdict
 from preprocessing_utils import load_animal_list, load_animal_eid_dict, \
     get_all_unnormalized_data_this_session, create_train_test_sessions
+from one_global import one
 
 npr.seed(65)
 
@@ -49,7 +50,7 @@ if __name__ == '__main__':
         sess_counter = 0
         for eid in animal_eid_dict[animal]:
             animal, unnormalized_inpt, y, session, num_viols_50, rewarded = \
-                get_all_unnormalized_data_this_session(eid, path=f"{part_processed_path}/eid_info_dict.pkl")
+                get_all_unnormalized_data_this_session(eid, one, path=f"{part_processed_path}/eid_info_dict.pkl")
             if num_viols_50 < 10:  # only include session if number of viols
                 # in 50-50 block is less than 10
                 if sess_counter == 0:
@@ -109,10 +110,10 @@ if __name__ == '__main__':
            np.shape(master_session_fold_lookup_table)[
                0], "number of unique sessions and session fold lookup don't " \
                    "match"
-    # assert len(master_inpt) == 181530, "design matrix for all IBL animals " \
-    #                                    "should have shape (181530, 3)"
-    # assert len(animal_list) == 37, "37 animals were studied in Ashwood et " \
-    #                                "al. (2020)"
+    assert len(master_inpt) == 181530, "design matrix for all IBL animals " \
+                                       "should have shape (181530, 3)"
+    assert len(animal_list) == 37, "37 animals were studied in Ashwood et " \
+                                   "al. (2020)"
     normalized_inpt = np.copy(master_inpt)
     normalized_inpt[:, 0] = preprocessing.scale(normalized_inpt[:, 0])
     np.savez(processed_ibl_data_path + '/all_animals_concat' + '.npz',
