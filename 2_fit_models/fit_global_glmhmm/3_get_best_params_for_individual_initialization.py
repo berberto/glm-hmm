@@ -76,7 +76,7 @@ if __name__ == '__main__':
                      lw=4)
         plt.xticks(list(range(0, len(labels_for_plot))),
                    labels_for_plot,
-                   rotation='20',
+                   rotation=20,
                    fontsize=24)
         plt.yticks(fontsize=30)
         plt.legend(fontsize=30)

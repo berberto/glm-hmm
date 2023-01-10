@@ -1,5 +1,6 @@
 # Fit lapse model to IBL data
 import os
+import sys
 
 import autograd.numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +15,8 @@ if __name__ == '__main__':
     data_dir = '../../data/ibl/data_for_cluster'
     results_dir = '../../results/ibl_global_fit'
 
-    num_lapse_params = 2
+    num_lapse_params = int(sys.argv[1])
+    assert num_lapse_params in [1,2], "Number of lapse parameters can only be 1 or 2"
     num_folds = 5
 
     # Fit GLM to all data
@@ -158,7 +160,7 @@ if __name__ == '__main__':
             plt.axhline(y=0, color="k", alpha=0.5, ls="--")
             plt.xticks(list(range(0, len(labels_for_plot))),
                        labels_for_plot,
-                       rotation='45',
+                       rotation=45,
                        fontsize=12)
             plt.title("GLM Weights; Initialization " + str(init) +
                       "\n Loglikelihood = " + str(this_ll))

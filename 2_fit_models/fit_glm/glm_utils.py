@@ -74,12 +74,12 @@ def plot_input_vectors(Ws,
             if len(labels_for_plot) > 0:
                 plt.xticks(list(range(0, len(labels_for_plot))),
                            labels_for_plot,
-                           rotation='90',
+                           rotation=90,
                            fontsize=12)
             else:
                 plt.xticks(list(range(0, 3)),
                            ['Stimulus', 'Past Choice', 'Bias'],
-                           rotation='90',
+                           rotation=90,
                            fontsize=12)
             plt.ylim((-3, 6))
 

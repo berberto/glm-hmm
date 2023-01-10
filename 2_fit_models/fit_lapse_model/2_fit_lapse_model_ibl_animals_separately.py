@@ -1,5 +1,6 @@
 # Fit lapse model to each animal's data separately
 import os
+import sys
 
 import autograd.numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +12,8 @@ np.random.seed(65)
 
 if __name__ == '__main__':
 
-    num_lapse_params = 2
+    num_lapse_params = int(sys.argv[1])
+    assert num_lapse_params in [1,2], "Number of lapse parameters can only be 1 or 2"
 
     data_dir = '../../data/ibl/data_for_cluster/data_by_animal'
     results_dir = '../../results/ibl_individual_fit'
@@ -21,6 +23,9 @@ if __name__ == '__main__':
 
     # Fit GLM to all data
     for animal in animal_list:
+
+        print(f"\n{animal}")
+
         # Fit GLM to all data
         animal_file = f"{data_dir}/{animal}_processed.npz"
         session_fold_lookup_table = load_session_fold_lookup(
@@ -166,7 +171,7 @@ if __name__ == '__main__':
                 plt.axhline(y=0, color="k", alpha=0.5, ls="--")
                 plt.xticks(list(range(0, 4)),
                            labels_for_plot,
-                           rotation='45',
+                           rotation=45,
                            fontsize=12)
                 plt.title("GLM Weights; Initialization " + str(init) +
                           "\n Loglikelihood = " + str(this_ll))
