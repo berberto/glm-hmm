@@ -22,8 +22,8 @@ if __name__ == '__main__':
     try:
         K, fold = int(sys.argv[1]), int(sys.argv[2])
     except:
-        K, fold = 3, 0
-        print(f"No parameters passed: running with (K = {K}, fold = {fold}")
+        raise Exception(f"No parameters passed: number of states `K`, and `fold`")
+
 
     def run (K, fold, iter):
         #  read in data and train/test split

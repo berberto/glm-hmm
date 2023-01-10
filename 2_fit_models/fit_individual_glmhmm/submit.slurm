@@ -5,9 +5,7 @@
 #SBATCH --job-name=hmm_ind
 #SBATCH -n 1
 #SBATCH --mem=16G
-#SBATCH --time=1:00:00
-#SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=alberto.pezzotta@crick.ac.uk
+#SBATCH --time=6-00:00:00
 
 parameters=`sed -n "${SLURM_ARRAY_TASK_ID} p" job_array_pars.txt`
 parArray=($parameters)

@@ -21,7 +21,7 @@ if __name__ == '__main__':
     C = 2  # number of output classes
     num_folds = 5  # number of folds
     D = 1  # number of output dimensions
-    K_max = 3  # maximum number of latent states
+    K_max = 5  # maximum number of latent states
     num_models = K_max + 2  # model for each latent + 2 lapse models
 
     animal_preferred_model_dict = {}

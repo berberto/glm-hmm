@@ -1,9 +1,12 @@
 #  In order to facilitate parallelization of jobs, create a job array that
 #  can be used on e.g. a cluster
 import numpy as np
+import os
 
 K_vals = [2, 3, 4, 5]
 num_folds = 5
+
+run = False
 
 if __name__ == '__main__':
     cluster_job_arr = []
@@ -11,3 +14,5 @@ if __name__ == '__main__':
         for K in K_vals:
             for i in range(num_folds):
                 f.write(f"{K}\t{i}\n")
+                if run:
+                    os.system(f"1_run_inference_global_fit_ibl.py  {K}  {i}")
