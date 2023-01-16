@@ -24,7 +24,7 @@ if __name__ == '__main__':
     cv_file = f"{results_dir}/cvbt_folds_model.npz"
     cvbt_folds_model = load_cv_arr(cv_file)
 
-    K_max = 3
+    K_max = 5
     for K in range(2, K_max + 1):
         print("K = " + str(K))
         with open(f"{results_dir}/best_init_cvbt_dict.json", 'r') as f:
@@ -129,24 +129,24 @@ if __name__ == '__main__':
         train_glm_lapse_model_cvbt_means = np.mean(train_glm_lapse_model,
                                                    axis=1)
         g = sns.lineplot(
-            data_for_plotting_df['model'],
-            data_for_plotting_df['cv_bit_trial'],
+            x=data_for_plotting_df['model'],
+            y=data_for_plotting_df['cv_bit_trial'],
             err_style="bars",
             mew=0,
             color=cols[0],
             marker='o',
-            ci=68,
+            errorbar=('ci',68),
             label="test",
             alpha=1,
             lw=4)
         sns.lineplot(
-            train_data_for_plotting_df['model'],
-            train_data_for_plotting_df['cv_bit_trial'],
+            x=train_data_for_plotting_df['model'],
+            y=train_data_for_plotting_df['cv_bit_trial'],
             err_style="bars",
             mew=0,
             color=cols[1],
             marker='o',
-            ci=68,
+            errorbar=('ci',68),
             label="train",
             alpha=1,
             lw=4)

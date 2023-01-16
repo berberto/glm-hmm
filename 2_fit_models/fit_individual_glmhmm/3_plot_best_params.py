@@ -124,23 +124,23 @@ if __name__ == '__main__':
             glm_lapse_model_cvbt_means = np.mean(glm_lapse_model, axis=1)
             train_glm_lapse_model_cvbt_means = np.mean(train_glm_lapse_model,
                                                        axis=1)
-            g = sns.lineplot(data_for_plotting_df['model'],
-                             data_for_plotting_df['cv_bit_trial'],
+            g = sns.lineplot(x=data_for_plotting_df['model'],
+                             y=data_for_plotting_df['cv_bit_trial'],
                              err_style="bars",
                              mew=0,
                              color=cols[0],
                              marker='o',
-                             ci=68,
+                             errorbar=('ci',68),
                              label="test",
                              alpha=1,
                              lw=4)
-            sns.lineplot(train_data_for_plotting_df['model'],
-                         train_data_for_plotting_df['cv_bit_trial'],
+            sns.lineplot(x=train_data_for_plotting_df['model'],
+                         y=train_data_for_plotting_df['cv_bit_trial'],
                          err_style="bars",
                          mew=0,
                          color=cols[1],
                          marker='o',
-                         ci=68,
+                         errorbar=('ci',68),
                          label="train",
                          alpha=1,
                          lw=4)
@@ -187,3 +187,4 @@ if __name__ == '__main__':
 
             fig.suptitle(animal, fontsize=40)
             fig.savefig(f"{save_dir}/{animal}.png")
+            plt.close(fig)

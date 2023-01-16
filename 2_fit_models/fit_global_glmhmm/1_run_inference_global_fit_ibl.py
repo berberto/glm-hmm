@@ -20,9 +20,9 @@ if __name__ == '__main__':
     prior_sigma = 100
 
     try:
-        K, fold = int(sys.argv[1]), int(sys.argv[2])
+        K, fold, iter = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
     except:
-        raise Exception(f"No parameters passed: number of states `K`, and `fold`")
+        raise Exception(f"Parameters from command line: `K`, `fold`, `iter`")
 
 
     def run (K, fold, iter):
@@ -65,5 +65,4 @@ if __name__ == '__main__':
                            init_param_file,
                            save_directory)
 
-    for iter in range(N_initializations):
-        run(K, fold, iter)
+    run(K, fold, iter)

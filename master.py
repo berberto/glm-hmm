@@ -50,17 +50,15 @@ os.chdir("..")
 # Fit the GLM-HMM model to all mice
 os.chdir("fit_global_glmhmm")
 run("python 0_create_cluster_job_arr.py")                   # 
-exit()
 # Here need to submit to cluster
 #   sbatch submit.slurm
 #   instead of run("python 1_run_inference_global_fit_ibl.py")             #
-# run("python 2_apply_post_processing.py")                    # 
-# run("python 3_get_best_params_for_individual_initialization.py")
-# os.chdir("..")
-# exit()
+run("python 2_apply_post_processing.py")                    # 
+run("python 3_get_best_params_for_individual_initialization.py")
+os.chdir("..")
 
 os.chdir("fit_individual_glmhmm")
-# run("python 0_create_cluster_job_arr.py")
+run("python 0_create_cluster_job_arr.py")
 # Here need to submit to cluster:
 #   sbatch submit.slurm
 #   instead of run("python 1_run_inference_ibl_individual.py")
@@ -73,34 +71,34 @@ os.chdir("../..")
 os.chdir("3_make_figures")
 
 os.chdir("figure_2")
-run("1_calculate_predictive_accuracy.py")
-run("2_make_top_plots_fig_2.py")
-run("3_make_figure_2f.py")
-run("4_make_figure_2g.py")
-run("5_make_figure_2h.py"  )
+run("python 1_calculate_predictive_accuracy.py")
+run("python 2_make_top_plots_fig_2.py")
+run("python 3_make_figure_2f.py")
+run("python 4_make_figure_2g.py")
+run("python 5_make_figure_2h.py"  )
 os.chdir("..")
 
 os.chdir("figure_3")
-run("1_make_top_plots_fig_3.py")  
-run("2_make_figure_3d.py")  
-run("3_make_figure_3e.py")
+run("python 1_make_top_plots_fig_3.py")  
+run("python 2_make_figure_3d.py")  
+run("python 3_make_figure_3e.py")
 os.chdir("..")
 
 os.chdir("figure_4")
-run("1_calculate_predictive_accuracy.py")
-run("2_make_all_plots_fig_4.py")
+run("python 1_calculate_predictive_accuracy.py")
+run("python 2_make_all_plots_fig_4.py")
 os.chdir("..")
 
-os.chdir("figure_5")
-run("1_make_plots_5def.py")
-os.chdir("..")
+# os.chdir("figure_5")
+# run("python 1_make_plots_5def.py")
+# os.chdir("..")
 
 os.chdir("figure_6")
-run("1_plot_rt_q_q_ibl.py") 
-run("2_create_bootstrap_distribution.py") 
-run("3_plot_response_times_90th_percentile.py")
+run("python 1_plot_rt_q_q_ibl.py") 
+run("python 2_create_bootstrap_distribution.py") 
+run("python 3_plot_response_times_90th_percentile.py")
 os.chdir("..")
 
-os.chdir("figure_7")
-run("1_make_plots_7def.py") 
-os.chdir("../..")
+# os.chdir("figure_7")
+# run("python 1_make_plots_7def.py") 
+# os.chdir("../..")

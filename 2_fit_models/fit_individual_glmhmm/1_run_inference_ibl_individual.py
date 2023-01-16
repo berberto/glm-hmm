@@ -19,7 +19,10 @@ if __name__ == '__main__':
         load_animal_list, load_data, create_violation_mask, \
         launch_glm_hmm_job
 
-    prior_sigma, transition_alpha, K, fold, iter = sys.argv[1:]
+    try:
+        prior_sigma, transition_alpha, K, fold, iter = sys.argv[1:]
+    except:
+        raise Exception(f"Parameters from command line: `prior_sigma`, `transition_alpha`, `K`, `fold`, `iter`")
 
     prior_sigma =  float(prior_sigma)
     transition_alpha =  float(transition_alpha)

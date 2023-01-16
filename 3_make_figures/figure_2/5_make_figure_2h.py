@@ -156,15 +156,15 @@ if __name__ == '__main__':
              '-',
              color='k',
              linewidth=0.9)
-    sns.lineplot(inpt_df['signed_contrast'],
-                 inpt_df['choice'],
+    sns.lineplot(x=inpt_df['signed_contrast'],
+                 y=inpt_df['choice'],
                  err_style="bars",
                  linewidth=0,
                  linestyle='None',
                  mew=0,
                  marker='o',
                  markersize=2,
-                 ci=95,
+                 errorbar=('ci',95),
                  err_kws={"linewidth": 0.75},
                  zorder=3,
                  color=(193 / 255, 39 / 255, 45 / 255))

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --partition=cpu
-#SBATCH --array=1-40
+#SBATCH --array=1-60
 #SBATCH --job-name=hmm_ind
 #SBATCH -n 1
 #SBATCH --mem=16G

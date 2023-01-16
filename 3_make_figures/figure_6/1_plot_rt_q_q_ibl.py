@@ -93,8 +93,8 @@ if __name__ == '__main__':
         max_val_2 = np.nanmax(rts_disengaged)
         max_val_overall = np.nanmax([max_val, max_val_2])
 
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
+        ax.set_xscale("log", nonpositive='clip')
+        ax.set_yscale("log", nonpositive='clip')
         eng_quantiles = []
         dis_quantiles = []
         for i in np.arange(0.01, 1.01, 0.01):

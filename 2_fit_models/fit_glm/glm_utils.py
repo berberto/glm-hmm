@@ -91,5 +91,5 @@ def plot_input_vectors(Ws,
              rotation=90,
              fontsize=15)
     fig.suptitle("GLM Weights: " + title, y=0.99, fontsize=14)
-    fig.savefig(figure_directory + 'glm_weights_' + save_title + '.png')
+    fig.savefig(f'{figure_directory}/glm_weights_{save_title}.png')
     plt.close(fig)

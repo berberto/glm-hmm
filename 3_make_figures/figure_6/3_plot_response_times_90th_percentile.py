@@ -21,10 +21,10 @@ if __name__ == '__main__':
     overall_dir = '../../results/ibl_individual_fit/'
     figure_dir = '../../figures/figure_6/'
     animal_list = load_animal_list(data_dir + 'animal_list.npz')
-    animal_list = animal_list[[[
-        21, 35, 18, 19, 26, 11, 16, 17, 24, 13, 22, 10, 20, 9, 31, 14, 23, 33,
-        15, 8, 27, 1, 34, 25, 3, 32, 36, 4, 29, 30, 0, 6, 28, 2, 5, 12, 7
-    ]]] # order animals by differences
+    # animal_list = animal_list[[[
+    #     21, 35, 18, 19, 26, 11, 16, 17, 24, 13, 22, 10, 20, 9, 31, 14, 23, 33,
+    #     15, 8, 27, 1, 34, 25, 3, 32, 36, 4, 29, 30, 0, 6, 28, 2, 5, 12, 7
+    # ]]] # order animals by differences
 
     fig, ax = plt.subplots(figsize=(4, 6))
     plt.subplots_adjust(left=0.15, bottom=0.2, right=0.9, top=0.95)

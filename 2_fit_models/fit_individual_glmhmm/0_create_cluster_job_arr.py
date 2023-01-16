@@ -7,7 +7,7 @@ prior_sigma = [2]
 transition_alpha = [2]
 K_vals = [2, 3, 4, 5]
 num_folds = 5
-N_initializations = 2
+N_initializations = 3
 
 run = False
 
