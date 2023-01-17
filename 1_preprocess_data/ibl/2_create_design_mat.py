@@ -50,7 +50,7 @@ if __name__ == '__main__':
         sess_counter = 0
         for eid in animal_eid_dict[animal]:
             animal, unnormalized_inpt, y, session, num_viols_50, rewarded = \
-                get_all_unnormalized_data_this_session(eid, one, path=f"{part_processed_path}/eid_info_dict.pkl")
+                get_all_unnormalized_data_this_session(eid, one)
             if num_viols_50 < 10:  # only include session if number of viols
                 # in 50-50 block is less than 10
                 if sess_counter == 0:

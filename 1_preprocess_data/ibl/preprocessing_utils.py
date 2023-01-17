@@ -4,22 +4,7 @@ from scipy.stats import bernoulli
 import json
 import pickle
 import os
-from functools import lru_cache
 
-@lru_cache
-def get_eid_info (path=None):
-    if path is None:
-        path = "../../data/ibl/partially_processed/eid_info_dict.pkl"
-    try:
-        with open(path, "rb") as f:
-            eid_info_dict = pickle.load(f)
-    except:
-        raise FileNotFoundError("Error loading eid info")
-    return eid_info_dict
-
-
-# doesn't work with current way eids are given
-# (or is because of the different version of ONE?)
 def get_animal_name(eid, one):
     info = one.get_details(eid)
     animal = info['subject']
@@ -30,11 +15,11 @@ def get_session_id(eid, one):
     session_id = f"{info['subject']}-{info['date']}-{info['number']:03d}"
     return session_id
 
-def get_raw_data(eid, one, info=None, path=None):
+def get_raw_data(eid, one):
     print(eid)
     # Get animal:
-    animal = get_animal_name(eid, one, info=info, path=path)
-    session_id = get_session_id(eid, one, info=info, path=path)
+    animal = get_animal_name(eid, one)
+    session_id = get_session_id(eid, one)
     # Get choice data, stim data and rewarded/not rewarded:
     trials = one.load_object(eid, 'trials', collection='alf')
     choice = trials.choice
@@ -154,13 +139,11 @@ def create_design_mat(choice, stim_left, stim_right, rewarded):
     return design_mat
 
 
-def get_all_unnormalized_data_this_session(eid, one, path=None):
-
-    eid_info_dict = get_eid_info(path)
+def get_all_unnormalized_data_this_session(eid, one):
 
     # Load raw data
     animal, session_id, stim_left, stim_right, rewarded, choice, bias_probs \
-        = get_raw_data(eid, one, info=eid_info_dict)
+        = get_raw_data(eid, one)
     # Subset choice and design_mat to 50-50 entries:
     trials_to_study = np.where(bias_probs == 0.5)[0]
     num_viols_50 = len(np.where(choice[trials_to_study] == 0)[0])
