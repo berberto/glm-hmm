@@ -31,7 +31,7 @@ if __name__ == '__main__':
             trial_data = one.load_object(eid, 'trials', collection='alf')
             choice = trial_data.choice
 
-            session_id = get_session_id(eid)
+            session_id = get_session_id(eid, one)
             full_sess_len = len(choice)
 
             try:
